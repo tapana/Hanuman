@@ -169,6 +169,8 @@ function h=show_monitor()
   end
 
   function update(robots,  teamNumber, playerNumber , draw_team, ignore_vision)
+    fprintf('draw team %d\n',draw_team);
+
     if MONITOR.target_fps==0.5 %Paused state
        set(MONITOR.hFpsText,'String','Paused');
        pause(1);
@@ -206,7 +208,10 @@ function h=show_monitor()
     end
 
     % AUTO-SWITCH YUYV TYPE
-    yuyv_type = r_mon.yuyv_type;
+    %ivy hack start
+    yuyv_type = 1;%r_mon.yuyv_type;
+    %ivy hack end
+    fprintf('check enable %d %d\n',MONITOR.enable1,yuyv_type);
     if MONITOR.enable1
       MONITOR.h1 = subplot(4,5,[1 2 6 7]);
       if yuyv_type==1

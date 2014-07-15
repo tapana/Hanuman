@@ -68,6 +68,7 @@ function update()
     Broadcast.update(broadcast_enable);
     -- Send image data every so often
     if( imagecount % imgRate == 0 ) then
+      --print("boardcast image");
       Broadcast.update_img(broadcast_enable);    
     end
     return true;

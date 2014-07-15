@@ -22,7 +22,7 @@ sendShm = { wcmshm=wcm, gcmshm=gcm, vcmshm=vcm, ocmshm=ocm, mcmshm=mcm }
 itemReject = 'yuyv, labelA, labelB, yuyv2, yuyv3, map'
 
 -- Initiate Sending Address
-CommWired.init(Config.dev.ip_wired,111111);
+CommWired.init(Config.dev.ip_wired,12344);
 print('Sending to',Config.dev.ip_wired);
 
 -- Add a little delay between packet sending
@@ -32,7 +32,7 @@ pktDelay = 1E6 * 0.001; --For image and colortable
 pktDelay2 = 1E6 * 0.001; --For info
 imageCount=0;
 
-debug = 0;
+debug = 1;
 
 subsampling=Config.vision.subsampling or 0;
 subsampling2=Config.vision.subsampling2 or 0;
@@ -380,6 +380,8 @@ function update(enable)
 end
 
 function update_img( enable, imagecount )
+
+
   if(enable==1) then
     --1: Fast debug mode
     --send 1/4 image and labelB
@@ -387,6 +389,8 @@ function update_img( enable, imagecount )
       sendImgSub4();
       sendB();
     end
+
+    print("send 1/4");
   elseif(enable==2) then
     --2: Vision debug mode
     --Send everything 

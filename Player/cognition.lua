@@ -1,5 +1,6 @@
 module(... or "", package.seeall)
 
+
 -- Add the required paths
 cwd = '.';
 computer = os.getenv('COMPUTER') or "";
@@ -41,6 +42,7 @@ if (string.find(Config.platform.name,'Webots')) then
 end
 
 function broadcast()
+  
   broadcast_enable = vcm.get_camera_broadcast();
   if broadcast_enable>0 then
     if broadcast_enable==1 then 
@@ -58,6 +60,7 @@ function broadcast()
     -- Send image data every so often
     if nProcessedImages % imgRate ==0 then
       Broadcast.update_img(broadcast_enable);    
+      print("broadcast image");
     end
     --Reset this flag at every broadcast
     --To prevent monitor running during actual game
@@ -92,7 +95,8 @@ function update()
       end
     end
   end
- 
+  
+
   if not comm_inited and 
     (vcm.get_camera_broadcast()>0 or
      vcm.get_camera_teambroadcast()>0) then

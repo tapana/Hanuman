@@ -56,7 +56,7 @@ while (loop) do
 --      unix.usleep(1E6*(1/fpsdesired - tPassed));
    end
    t_timing=t1;
-   dcm.update()
+   dcm.update();
 
 --   pos=vector.new(sensorShm:get('position'))*180/math.pi;
 --   print(string.format("Position:\n Head: %f %f",pos[1],pos[2]));

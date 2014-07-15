@@ -34,7 +34,8 @@ function Monitor(team,player)
     for i=1:max_player_id,
       if shm_check(team2track,i)>0 
         robots{i,1}=shm_robot(team2track,i);
-	player2track=[player2track i];
+	      player2track=[player2track i];
+        fprintf('found player id %d\n',i);
       end
     end
     if length(player2track)==0

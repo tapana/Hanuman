@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <assert.h>
+#include <errno.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -74,6 +75,8 @@ static int lua_comm_update(lua_State *L) {
       return -1;
     }
 
+    /*************send socket *****************/
+
     send_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (send_fd < 0) {
       printf("Could not open datagram send socket\n");
@@ -97,10 +100,18 @@ static int lua_comm_update(lua_State *L) {
       return -1;
     }
 
+
+  /********receive socket ********/
     recv_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (recv_fd < 0) {
       printf("Could not open datagram recv socket\n");
       return -1;
+    }
+
+    int reuse = 1;
+    if (setsockopt(recv_fd, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) == -1) {
+        printf("setsockopt: %d\n", errno);
+        return -1;
     }
 
     struct sockaddr_in local_addr;

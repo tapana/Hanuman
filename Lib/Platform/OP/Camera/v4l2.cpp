@@ -40,7 +40,7 @@ int video_fd = -1;
 int nbuffer = 2;
 int width = 320;
 int height = 240;
-char invert = 1;
+char invert = 0;
 //int width = 640;
 //int height = 480;
 

@@ -29,10 +29,10 @@
 //#define IP "192.168.255.255" 
 
 
-#define IP "192.168.255.255"
-//#define IP "192.168.1.255"
+//#define IP "192.168.255.255"
+#define IP "192.168.1.255"
 //#define IP "139.140.218.255"
-#define PORT 12500
+#define PORT 12344
 #define MDELAY 2
 #define TTL 16
 //#define MAX_LENGTH 16000
@@ -88,9 +88,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sizeof(dest_addr)) < 0)
       mexErrMsgTxt("Could not connect to destination address");
 
+    /***************receive socket ******************/
+
     recv_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (recv_fd < 0)
       mexErrMsgTxt("Could not open datagram recv socket");
+
+    int reuse = 1;
+    if (setsockopt(recv_fd, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) == -1) {
+        mexErrMsgTxt("could not set option reuse port on recv socket ");        
+    }
 
     struct sockaddr_in local_addr;
     bzero((char *) &local_addr, sizeof(local_addr));

@@ -13,7 +13,7 @@ require('carray');
 require('vector');
 require('Config');
 require('Transform')
-
+require('IMU');
 print("Robot ID:",Config.game.robotID);
 
 dirReverse = Config.servo.dirReverse;
@@ -139,6 +139,9 @@ function entry()
     actuator.offset[i+14]=armBias[i];
   end
 
+
+  IMU.init();
+
 end
 
 -- Setup CArray mappings into shared memory
@@ -211,8 +214,71 @@ end
 --Servo feedback param for servomotors
 --Used to stiffen support foot during kicking
 
+function sync_gain_AX12()
+     --28,29: Compliance slope positive / negative
+  local addr={28,29};
+  local ids = {};
+  local data = {};
+  local n = 0;
+  for i = 1,#idMap do
+    --check if motor[i] is AX12 
+    if Config.servo.motorType == 1 then
+      n = n+1;
+      ids[n] = idMap[i];
+      if actuator.gain[i]>0 then
+				data[n] = Config.servo.slope_param[2];
+      else
+				data[n] = Config.servo.slope_param[1];
+      end
+    end
+  end
+ 	if n > 0 then
+    Dynamixel.sync_write_byte(ids, addr[1], data);
+    Dynamixel.sync_write_byte(ids, addr[2], data);
+  end
+
+end
+
+
+function sync_gain_MX28()
+  -- P: 28, I: 27, D: 26
+  local addr={28,27,26};
+
+  local ids = {};
+  local data_p = {};
+  local data_i = {};
+  local data_d = {};
+  local n = 0;
+  for i = 1,#idMap do
+    --check if motor[i] is MX28
+    if Config.servo.motorType == 2 then
+		  n = n+1;
+		  ids[n] = idMap[i];
+		  if actuator.gain[i]>0 then
+		    data_p[n] = Config.servo.pid_param[2][1];
+		    data_i[n] = Config.servo.pid_param[2][2];
+		    data_d[n] = Config.servo.pid_param[2][3];
+		  else
+		    data_p[n] = Config.servo.pid_param[1][1];
+		    data_i[n] = Config.servo.pid_param[1][2];
+		    data_d[n] = Config.servo.pid_param[1][3];
+		  end
+  	end
+  end
+	if n > 0 then
+		Dynamixel.sync_write_byte(ids, addr[1], data_p);
+		Dynamixel.sync_write_byte(ids, addr[2], data_i);
+		Dynamixel.sync_write_byte(ids, addr[3], data_d);
+  end
+
+end
+
 function sync_gain()
-  if Config.servo.pid==0 then --Old firmware.. compliance slope
+
+-- ivy change for Hunuman robot
+	sync_gain_AX12();
+	sync_gain_MX28();
+ --[[ if Config.servo.pid==0 then --Old firmware.. compliance slope
     --28,29: Compliance slope positive / negative
     local addr={28,29};
     local ids = {};
@@ -255,6 +321,7 @@ function sync_gain()
     Dynamixel.sync_write_byte(ids, addr[2], data_i);
     Dynamixel.sync_write_byte(ids, addr[3], data_d);
   end
+--]]
 end
 
 function sync_battery()
@@ -386,6 +453,8 @@ function nonsync_read()
     end
   end
 
+-- TODO add imu reading from i2c
+ --[[
   --IMU reading
 
   local data=Dynamixel.read_data(200,38,12);
@@ -393,16 +462,16 @@ function nonsync_read()
 
   if data and #data>11 then
     for i=1,3 do
-      sensor.imuGyr[Config.gyro.rpy[i]] =
+      sensor.imuGyr[Config.gyro.rpy[i] ] =
       Config.gyro.sensitivity[i]*
       (DynamixelPacket.byte_to_word(data[offset],data[offset+1])-gyrZero[i]);
 
-      sensor.imuAcc[Config.acc.xyz[i]] = 
+      sensor.imuAcc[Config.acc.xyz[i] ] = 
       Config.acc.sensitivity[i]*
       (DynamixelPacket.byte_to_word(data[offset+6],data[offset+7])-Config.acc.zero[i]);
 
-      sensor.imuGyrRaw[Config.gyro.rpy[i]]=DynamixelPacket.byte_to_word(data[offset],data[offset+1]);
-      sensor.imuAccRaw[Config.acc.xyz[i]]=DynamixelPacket.byte_to_word(data[offset+6],data[offset+7]);
+      sensor.imuGyrRaw[Config.gyro.rpy[i] ]=DynamixelPacket.byte_to_word(data[offset],data[offset+1]);
+      sensor.imuAccRaw[Config.acc.xyz[i] ]=DynamixelPacket.byte_to_word(data[offset+6],data[offset+7]);
       offset = offset + 2;
     end
   end
@@ -413,42 +482,36 @@ function nonsync_read()
     sensor.button[1]=math.floor(data[1]/2);
     sensor.button[2]=data[1]%2;
   end
+  --]]
+
+
 end
 
 function update_imu()
-  t=unix.time();
-  if tLast==0 then tLast=t; end
-  tPassed=t-tLast;
-  tLast=t;
 
-  iAngle=vector.new({sensor.imuAngle[1],sensor.imuAngle[2],sensor.imuAngle[3]});
-  gyrDelta = vector.new({sensor.imuGyr[1],sensor.imuGyr[2],sensor.imuGyr[3]})
-  *math.pi/180 * tPassed; --dps to rps conversion
+  IMU.update();
 
-  --Angle transformation: yaw -> pitch -> roll
-  local tTrans=Transform.rotZ(iAngle[3]);
-  tTrans=tTrans*Transform.rotY(iAngle[2]);
-  tTrans=tTrans*Transform.rotX(iAngle[1]);
-
-  local tTransDelta=Transform.rotZ(gyrDelta[3]);
-  tTransDelta=tTransDelta*Transform.rotY(gyrDelta[2]);
-  tTransDelta=tTransDelta*Transform.rotX(gyrDelta[1]);
-  tTrans=tTrans*tTransDelta;
-  iAngle=Transform.getRPY(tTrans);
-
-  local accMag=sensor.imuAcc[1]^2+sensor.imuAcc[2]^2+sensor.imuAcc[3]^2;
-  --print("AccMag:",accMag)
-  if accMag>Config.angle.gMin and accMag<Config.angle.gMax then
-    local angR=math.atan2(-sensor.imuAcc[2], 
-    math.sqrt(sensor.imuAcc[1]^2+sensor.imuAcc[3]^2) );
-    local angP=math.atan2(sensor.imuAcc[1], 
-    math.sqrt(sensor.imuAcc[2]^2+sensor.imuAcc[3]^2) );
-    iAngle[1], iAngle[2] =
-    (1-Config.angle.accFactor)*iAngle[1]+Config.angle.accFactor*angR,
-    (1-Config.angle.accFactor)*iAngle[2]+Config.angle.accFactor*angP;
+  --     acc[3] | gyro[3]       | mag[3]
+  --unit  g=1   | rad/sec.  | ??  
+  raw = IMU.get_raw();
+  radToDeg = 0.01745329251;
+  
+  
+  for i=1,3 do      
+      sensor.imuAcc[ Config.acc.xyz[i]  ] = raw[i+0];
+      sensor.imuGyr[ Config.gyro.rpy[i] ] = raw[i+3] * radToDeg; 
   end
 
-  sensor.imuAngle[1],sensor.imuAngle[2],sensor.imuAngle[3] = iAngle[1],iAngle[2],iAngle[3];
+  sensor.imuGyr[2] = -sensor.imuGyr[2];
+
+  --euler angle
+  -- 	  pitch | roll | yaw
+  --unit  radian 
+  e = IMU.get_euler();
+  for i=1,3 do
+      sensor.imuAngle[ Config.gyro.rpy[i] ] = e[i];
+  end
+
 end
 
 function update()
@@ -479,16 +542,25 @@ function update()
   bulk_read();
 
   nonsync_read();
+
+-- TODO change to  madwick IMU estimate
   update_imu();
 
   count=count+1;
   sensor.updatedCount[1]=count%100; --This count indicates whether DCM has processed current reading or not
 
+
+--sync_battery cause a glich 
+--[[
   if actuator.battTest[1]==1 then --in test mode, refresh faster
     sync_battery();
   else
-    if count%100==0 then sync_battery();end
+    if count%100==0 then 
+	sync_battery();
+    end
   end
+--]]
+
   if actuator.hardnessChanged[1]==1 then
     sync_hardness();
     unix.usleep(100);
@@ -513,7 +585,7 @@ function update()
   sync_command();
   unix.usleep(100);
 
-  sync_led();
+--  sync_led();
 end
 
 function exit()

@@ -14,7 +14,7 @@ function MonitorWireless(team,player)
     SHM_DIR='/dev/shm';
   end
 
-  team=1;
+  team=18;
   player=1;
    
 
@@ -23,7 +23,7 @@ function MonitorWireless(team,player)
 
   %%%%% Init SHM for robots
   t0=tic;
-  draw_team=3; %Wireless Team Monitor Mode
+  draw_team=18; %Wireless Team Monitor Mode
 
   %Check SHM for players
   if shm_check(team,player)>0 

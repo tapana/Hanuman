@@ -127,7 +127,7 @@ initial_step=2;
 ----------------------------------------------------------
 
 function entry()
-  print ("Motion: Walk entry")
+  print ("Motion: Walk entry ivy test")
   --SJ: now we always assume that we start walking with feet together
   --Because joint readings are not always available with darwins
   uLeft = util.pose_global(vector.new({-supportX, footY, 0}),uTorso);
@@ -148,9 +148,11 @@ function entry()
 end
 
 
+
 function update()
   t = Body.get_time();
 
+ 
   --Don't run update if the robot is sitting or standing
   bodyHeightCurrent = vcm.get_camera_bodyHeight();
   if  bodyHeightCurrent<bodyHeight-0.01 then
@@ -168,11 +170,14 @@ function update()
 
   --SJ: Variable tStep support for walkkick
   ph = (t-tLastStep)/tStep;
+
   if ph>1 then
     iStep=iStep+1;
     ph=ph-math.floor(ph);
     tLastStep=tLastStep+tStep;
   end
+
+
 
   --Stop when stopping sequence is done
   if (iStep > iStep0) and(stopRequest==2) then
@@ -381,11 +386,10 @@ function motion_legs(qLegs)
   elseif supportLeg==1 then
     yawAngle = uRight[3]-uTorsoActual[3];
   end
-  gyro_roll = gyro_roll0*math.cos(yawAngle) +
-  -gyro_pitch0* math.sin(yawAngle);
-  gyro_pitch = gyro_pitch0*math.cos(yawAngle)
-  -gyro_roll0* math.sin(yawAngle);
+  gyro_roll  = gyro_roll0*math.cos(yawAngle)  - gyro_pitch0* math.sin(yawAngle);
+  gyro_pitch = gyro_pitch0*math.cos(yawAngle) - gyro_roll0* math.sin(yawAngle);
 
+  
   ankleShiftX=util.procFunc(gyro_pitch*ankleImuParamX[2],ankleImuParamX[3],ankleImuParamX[4]);
   ankleShiftY=util.procFunc(gyro_roll*ankleImuParamY[2],ankleImuParamY[3],ankleImuParamY[4]);
   kneeShiftX=util.procFunc(gyro_pitch*kneeImuParamX[2],kneeImuParamX[3],kneeImuParamX[4]);
@@ -439,6 +443,8 @@ function motion_legs(qLegs)
   --]]
 
   Body.set_lleg_command(qLegs);
+  --print("send leg cmd");
+
 end
 
 function motion_arms()
@@ -453,8 +459,11 @@ function motion_arms()
     qRArmActual[1],qRArmActual[2]=qRArm0[1]+armShift[1],qRArm0[2]+armShift[2];
   end
 
-  qLArmActual[2]=math.max(8*math.pi/180,qLArmActual[2])
-  qRArmActual[2]=math.min(-8*math.pi/180,qRArmActual[2]);
+--  qLArmActual[2]=math.max(8*math.pi/180,qLArmActual[2])
+--  qRArmActual[2]=math.min(-8*math.pi/180,qRArmActual[2]);
+
+--  qLArmActual[2]=math.max(37*math.pi/180,qLArmActual[2])
+--  qRArmActual[2]=math.min(-37*math.pi/180,qRArmActual[2]);
   qLArmActual[3]=qLArm0[3];
   qRArmActual[3]=qRArm0[3];
   Body.set_larm_command(qLArmActual);

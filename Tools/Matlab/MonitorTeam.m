@@ -7,28 +7,37 @@ end
 nRobots = 4;
 robots = cell(nRobots,1);
 
-teamNumber = 25;
+teamNumber = 18;
 nUpdate = 0;
 
 
 while (1)
 	nUpdate = nUpdate + 1;
-
+    i=0;
 	% receive udp packets
 	while(UDPComm('getQueueSize') > 0)
-		msg = UDPComm('receive');
+		i = i+1;
+        msg = UDPComm('receive');
+       
 		if ~isempty(msg)
-      try
-        msg = lua2mat(char(msg));
-        msg.tReceive = time;
-        if (isfield(msg, 'teamNumber') && msg.teamNumber == teamNumber)
-          robots{msg.id} = msg;
+          try
+            fprintf('try prasing msg\n');
+            msg = lua2mat(char(msg));
+            fprintf('prasing done\n');
+            msg.tReceive = time;
+            fprintf('team number %d\n',msg.teamNumber);
+
+            if (isfield(msg, 'teamNumber') && msg.teamNumber == teamNumber)
+              robots{msg.id} = msg;
+            end
+          catch
+            %disp('failed to parse')
+            %disp(char(msg))
+            fprintf('failed lua2mat\n');
+          end
+        else
+           fprintf('msg empty');         
         end
-      catch
-        %disp('failed to parse')
-        %disp(char(msg))
-      end
-    end
 	end
 
 	% plot current robot positions

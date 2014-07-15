@@ -8,8 +8,8 @@ stance={};
 stance.footXSit = -0.05;
 stance.bodyTiltSit = -5*math.pi/180;
 stance.bodyHeightSit = 0.18;
-stance.qLArmSit = math.pi/180*vector.new({140,8,-40});
-stance.qRArmSit = math.pi/180*vector.new({140,-8,-40});
+stance.qLArmSit = math.pi/180*vector.new({0,-20,-0});
+stance.qRArmSit = math.pi/180*vector.new({0,20,-0});
 stance.dpLimitSit=vector.new({.03,.01,.06,.1,.3,.3});
 
 --This makes correct sideways dive
@@ -55,7 +55,7 @@ head.neckX=0.013; --From CoM to neck joint
 
 --IMU bias/sensitivity parameters
 gyro={};
-gyro.rpy={3,2,1}	--axis remap, rotation in x,y,z
+gyro.rpy={2,1,3}	--axis remap, rotation in x,y,z
 acc={};
 acc.xyz={2,1,3};	--axis remap
 
@@ -108,6 +108,58 @@ end
 -----------------------------------------------
 
 nJoint = #servo.idMap;
+
+--ivy hack
+--hybrid servo system ax12-1024 + mx28 4096
+print(robotName.. " has ivy hybrid firmware AX12+MX28");
+
+  servo.posZero={
+      512,512, --Head
+      512,512,512, --LArm
+      2048,2048,2048,2048,2048,2048, --LLeg
+      2048,2048,2048,2048,2048,2048, --RLeg
+      512,512,512, --RArm
+      --    512,    --For aux
+    }
+
+-- 1 :AX12 | 2:MX28
+  servo.motorType = {
+--  local isAX12={
+    1,1,          --Head
+    1,1,1,        --LArm
+    2,2,2,2,2,2,  --LLeg
+    2,2,2,2,2,2,  --RLeg
+    1,1,1         --RArm
+    };
+
+  servo.steps = {};
+  servo.moveRange = {};
+  for i=1,nJoint do
+    if servo.motorType[i] == 1 then --AX12 
+      servo.steps[i] = 1024;
+      servo.moveRange[i] = 300.0*math.pi/180;
+    else		--MX28
+      servo.steps[i] = 4096;
+      servo.moveRange[i] = 360.0*math.pi/180;
+    end
+
+    print(' '..servo.motorType[i]..'* '..i..')'..servo.steps[i]);
+  end
+
+  -- Servo slope parameters for AX12
+  servo.slope_param={
+    32, --Regular slope
+    16, --Kick slope
+  };
+
+  -- Servo PID Parameters for MX28
+  servo.pid_param={
+    {32,0,4}, --Regular PID gain
+    {64,0,4}, --Kick PID gain
+  };
+
+--before edit
+--[[
 if servo.pid ==0 then -- For old firmware with 12-bit precision
   print(robotName.." has 12-bit firmware")
   servo.steps=vector.ones(nJoint)*1024;
@@ -147,9 +199,12 @@ else -- For new, PID firmware with 14-bit precision
   };
 
   servo.moveRange=vector.ones(nJoint)*360*math.pi/180;
-  --[[ For aux
+  -- For aux
   servo.moveRange[21] = 300;
   servo.steps[21] = 1024;
-  --]]
+  
 end
+  --]]
+  -- end_ivy_hack
+
 

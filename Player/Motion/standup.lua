@@ -22,7 +22,7 @@ use_rollback_getup = Config.use_rollback_getup or 0;
 batt_max = Config.batt_max or 10;
 
 function entry()
-  print(_NAME.." entry");
+  print(_NAME.." entry ii");
 
   keyframe.entry();
   Body.set_body_hardness(1);

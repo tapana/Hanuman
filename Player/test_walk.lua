@@ -245,9 +245,23 @@ end
 
 --Now both nao and darwin runs this separately
 if (darwin) or (newnao) then
-  local tDelay = 0.005 * 1E6; -- Loop every 5ms
+  local tDelay = 0.005 * 1E3; -- Loop every 5ms
+  
+  local t0 = unix.time();
+  local ncount =200;
+  local count =0
   while 1 do
+    
     update();
-    unix.usleep(tDelay);
+    local t1 = unix.time();
+    count = count+1;
+    if (count >= ncount ) then
+      count =0;
+      local fps = ncount/(t1-t0);
+      t0 = t1;
+      print(t0.."   FPS "..fps );
+
+    end
+    unix.usleep(10000);
   end
 end

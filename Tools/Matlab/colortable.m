@@ -5,7 +5,7 @@ function colortable(action, varargin)
 
 global COLORTABLE
 if isempty(COLORTABLE)
-  colortable_init;
+  colortable_init;  
 end
 
 if (nargin < 1)

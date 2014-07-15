@@ -47,7 +47,7 @@ while (1)
   tic;
   r_mon=robot.get_monitor_struct();
 %	subplot(1,2,r_mon.camera.select+1);
-  yuyv_type = r_mon.yuyv_type;
+  yuyv_type = 1;%r_mon.yuyv_type;
  	if yuyv_type==1
    	  yuyv = robot.get_yuyv();
 %			disp('Got yuyv');

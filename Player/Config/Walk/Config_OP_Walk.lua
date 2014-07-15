@@ -28,9 +28,14 @@ walk.supportY = 0.010;
 --walk.qLArm=math.pi/180*vector.new({90,8,-40});
 --walk.qRArm=math.pi/180*vector.new({90,-8,-40});
 
-walk.qLArm=math.pi/180*vector.new({90,2,-40});
-walk.qRArm=math.pi/180*vector.new({90,-2,-40});
+--walk.qLArm=math.pi/180*vector.new({0,10,0});
+--walk.qRArm=math.pi/180*vector.new({0,-10,0});
+--walk.qLArmKick=math.pi/180*vector.new({0,20,0});
+--walk.qRArmKick=math.pi/180*vector.new({0,-20,0});
 
+
+walk.qLArm=math.pi/180*vector.new({0,-20,0});
+walk.qRArm=math.pi/180*vector.new({0,20,0});
 walk.qLArmKick=math.pi/180*vector.new({90,30,-60});
 walk.qRArmKick=math.pi/180*vector.new({90,-30,-60});
 
@@ -56,9 +61,12 @@ walk.spreadComp = 0.015;
 --Imu feedback parameters, alpha / gain / deadband / max
 --------------------------------------------------------------
 gyroFactor = 0.273*math.pi/180 * 300 / 1024; --dps to rad/s conversion
+--ivy adjust gyro scale for new imu 
+gyroFactor = gyroFactor * 5000;
+
 
 if Config.servo.pid==1 then
-  walk.ankleImuParamX={0.5,0.3*gyroFactor,
+  walk.ankleImuParamX={0.5,0.3*gyroFactor  ,
                         1*math.pi/180, 25*math.pi/180};
   walk.kneeImuParamX={0.5,1.2*gyroFactor,
                         1*math.pi/180, 25*math.pi/180};
@@ -197,7 +205,8 @@ walk.walkKickPh=0.5;
 walk.kickXComp = 0;
 walk.supportCompL = {0,0,0};
 walk.supportCompR = {0,0,0};
-walk.servoBias = {0,0,0,0,0,0,0,0,0,0,0,0};
+--walk.servoBias = {0,0,0,0,0,0,0,0,0,0,0,0};
+walk.servoBias = {0,-15,0,10,7,-3,-10,10,-20,-20,-15,10};
 walk.footXComp = 0;
 walk.footYComp = 0;
 
